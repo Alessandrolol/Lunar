@@ -1,0 +1,324 @@
+function getplayers()
+	local players = {}
+	for _, x in pairs(game:GetService("Players"):GetPlayers()) do
+		players[x.Name] = x
+	end
+	players["LocalPlayer"] = game:GetService("Players").LocalPlayer
+	return players
+end
+
+function customprint(text: string, properties: table, imageId: rbxasset)
+	print(text)
+	task.wait(.025)
+	local msg = game:GetService("CoreGui").DevConsoleMaster.DevConsoleWindow.DevConsoleUI:WaitForChild("MainView").ClientLog[tostring(#game:GetService("CoreGui").DevConsoleMaster.DevConsoleWindow.DevConsoleUI.MainView.ClientLog:GetChildren())-1].msg
+	for i, x in pairs(properties) do
+		msg[i] = x
+	end
+	if imageId then msg.Parent.image.Image = imageId end
+end
+function runanimation(animationId, player)
+	local plr = player or getplayer()
+	local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		local animation = Instance.new("Animation")
+		animation.AnimationId = "rbxassetid://" .. tostring(animationId)
+		humanoid:LoadAnimation(animation):Play()
+	end
+end
+function getping(suffix: boolean)
+	local rawping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+	local pingstr = rawping:sub(1,#rawping-7)
+	local pingnum = tonumber(pingstr)
+	local ping = tostring(math.round(pingnum))
+	return not suffix and ping or ping.." ms"
+end
+function getfps(suffix: boolean)
+	local rawfps = game:GetService("Stats").Workspace.Heartbeat:GetValue()
+	local fpsnum = tonumber(rawfps)
+	local fps = tostring(math.round(fpsnum))
+	return not suffix and fps or fps.." fps"
+end
+function getplayer(name: string)
+	return not name and getplayers()["LocalPlayer"] or getplayers()[name]
+end
+function identifyexecutor() : (string,string)
+	return "Lunar","1.0.0"
+end
+function getexecutorname()
+	return "Lunar"
+end
+function isrbxactive()
+	return true
+end
+function isgameactive()
+	if game.PlaceId == nil then
+		return false
+	end
+	return true
+end
+function httpget(url)
+	local d,ise,Body=false,false,""
+	game:GetService("HttpService"):RequestInternal({Url = url,Method = "GET"}):Start(function(suc, res) if not suc then Body = res.StatusCode ise = true d=true return end Body=res.Body d=true end)
+	repeat task.wait() until d
+	if ise then error(Body, 0) end
+	return Body
+end
+function getlocalplayer()
+	return getplayers()["LocalPlayer"]
+end
+function getdevice()
+	local inputsrv = game:GetService("UserInputService")
+	local platform = inputsrv:GetPlatform()
+	if platform == Enum.Platform.Windows then
+		return 'Windows'
+	elseif platform == Enum.Platform.OSX then
+		return 'macOS'
+	elseif platform == Enum.Platform.IOS then
+		return 'iOS'
+	elseif platform == Enum.Platform.UWP then
+		return 'Windows (Microsoft Store)'
+	elseif platform == Enum.Platform.Android then
+		return 'Android'
+	else return 'Unknown'
+	end
+end
+function getos()
+	local inputsrv = game:GetService("UserInputService")
+	local platform = inputsrv:GetPlatform()
+	if platform == Enum.Platform.Windows then
+		return 'Windows'
+	elseif platform == Enum.Platform.OSX then
+		return 'macOS'
+	elseif platform == Enum.Platform.IOS then
+		return 'iOS'
+	elseif platform == Enum.Platform.UWP then
+		return 'Windows (Microsoft Store)'
+	elseif platform == Enum.Platform.Android then
+		return 'Android'
+	else return 'Unknown'
+	end
+end
+function getplatform()
+	local inputsrv = game:GetService("UserInputService")
+	local platform = inputsrv:GetPlatform()
+	if platform == Enum.Platform.Windows then
+		return 'Windows'
+	elseif platform == Enum.Platform.OSX then
+		return 'macOS'
+	elseif platform == Enum.Platform.IOS then
+		return 'iOS'
+	elseif platform == Enum.Platform.UWP then
+		return 'Windows (Microsoft Store)'
+	elseif platform == Enum.Platform.Android then
+		return 'Android'
+	else return 'Unknown'
+	end
+end
+
+local Drawing = {}
+
+local Camera = game:GetService('Workspace'):WaitForChild('Camera')
+local RunService = game:GetService('RunService')
+
+local BaseDrawingProperties = setmetatable({
+	Visible = false,
+	Color = Color3.new(),
+	Transparency = 0,
+	Remove = function()
+	end
+}, {
+	__add = function(tbl1, tbl2)
+		local new = {}
+		for i, v in next, tbl1 do
+			new[i] = v
+		end
+		for i, v in next, tbl2 do
+			new[i] = v
+		end
+		return new
+	end
+})
+
+local DrawingUI = nil;
+
+Drawing.new = function(Type)
+	if DrawingUI == nil then
+		DrawingUI = Instance.new('ScreenGui');
+		DrawingUI.Parent = gethui();
+		DrawingUI.Name = 'DrawingLib'
+		DrawingUI.DisplayOrder = 1999999999
+		DrawingUI.IgnoreGuiInset = true
+	end
+
+	if (Type == 'Line') then
+		local LineProperties = ({
+			To = Vector2.new(),
+			From = Vector2.new(),
+			Thickness = 1,
+		} + BaseDrawingProperties)
+
+		local LineFrame = Instance.new('Frame');
+		LineFrame.AnchorPoint = Vector2.new(0.5, 0.5);
+		LineFrame.BorderSizePixel = 0
+
+		LineFrame.BackgroundColor3 = LineProperties.Color
+		LineFrame.Visible = LineProperties.Visible
+		LineFrame.BackgroundTransparency = LineProperties.Transparency
+
+
+		LineFrame.Parent = DrawingUI
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if (Property == 'To') then
+					local To = Value
+					local Direction = (To - LineProperties.From);
+					local Center = (To + LineProperties.From) / 2
+					local Distance = Direction.Magnitude
+					local Theta = math.atan2(Direction.Y, Direction.X);
+
+					LineFrame.Position = UDim2.fromOffset(Center.X, Center.Y);
+					LineFrame.Rotation = math.deg(Theta);
+					LineFrame.Size = UDim2.fromOffset(Distance, LineProperties.Thickness);
+
+					LineProperties.To = To
+				end
+				if (Property == 'From') then
+					local From = Value
+					local Direction = (LineProperties.To - From);
+					local Center = (LineProperties.To + From) / 2
+					local Distance = Direction.Magnitude
+					local Theta = math.atan2(Direction.Y, Direction.X);
+
+					LineFrame.Position = UDim2.fromOffset(Center.X, Center.Y);
+					LineFrame.Rotation = math.deg(Theta);
+					LineFrame.Size = UDim2.fromOffset(Distance, LineProperties.Thickness);
+
+
+					LineProperties.From = From
+				end
+				if (Property == 'Visible') then
+					LineFrame.Visible = Value
+					LineProperties.Visible = Value
+				end
+				if (Property == 'Thickness') then
+					Value = Value < 1 and 1 or Value
+
+					local Direction = (LineProperties.To - LineProperties.From);
+					local Distance = Direction.Magnitude
+
+					LineFrame.Size = UDim2.fromOffset(Distance, Value);
+
+					LineProperties.Thickness = Value
+				end
+				if (Property == 'Transparency') then
+					LineFrame.BackgroundTransparency = 1 - Value
+					LineProperties.Transparency = Value
+				end
+				if (Property == 'Color') then
+					LineFrame.BackgroundColor3 = Value
+					LineProperties.Color = Value 
+				end
+				if (Property == 'ZIndex') then
+					LineFrame.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == 'remove') then
+					return (function()
+						LineFrame:Destroy();
+					end)
+				end
+				if Property == 'Destroy' then
+					return (function()
+						LineFrame:Destroy();
+					end)
+				end
+				return LineProperties[Property]
+			end)
+		})
+	end
+
+	if (Type == 'Circle') then
+		local CircleProperties = ({
+			Radius = 150,
+			Filled = false,
+			Position = Vector2.new()
+		} + BaseDrawingProperties)
+
+		local CircleFrame = Instance.new('Frame');
+
+		CircleFrame.AnchorPoint = Vector2.new(0.5, 0.5);
+		CircleFrame.BorderSizePixel = 0
+
+		CircleFrame.BackgroundColor3 = CircleProperties.Color
+		CircleFrame.Visible = CircleProperties.Visible
+	end
+	if Property == 'Filled' then
+		-- i'll do this later
+	end
+	if (Property == 'ZIndex') then
+		PointA.ZIndex = Value
+		PointB.ZIndex = Value
+		PointC.ZIndex = Value
+	end
+end
+__index = (function(self, Property)
+	if (string.lower(tostring(Property)) == 'remove') then
+		return (function()
+			PointA:Remove();
+			PointB:Remove();
+			PointC:Remove();
+		end)
+	end
+	if Property ==  'Destroy' then
+		return (function()
+			PointA:Remove();
+			PointB:Remove();
+			PointC:Remove();
+		end)
+	end
+	return TriangleProperties[Property]
+end)
+
+function getgenv()
+	return getfenv()
+end
+local rendered = false
+getgenv().isrenderobj = function(a, drawing2)
+	if rendered == true then
+		return false
+	end
+
+	rendered = true
+	return true
+end
+
+getgenv().setrenderproperty = function(drawing, object, value)
+	drawing[object] = value
+	return object
+end
+
+getgenv().boolean31 = true
+
+getgenv().getrenderproperty = function(drawing, object)
+	if object == "Visible" then
+		return boolean31()
+	end
+
+	return true
+end
+
+Drawing.clear = function() 
+	DrawingUI:ClearAllChildren();
+end
+
+getgenv().Drawing = Drawing
+getgenv().cleardrawcache = Drawing.clear
+Drawing.cleardrawcache = Drawing.clear
+Drawing.Fonts = {
+	UI = 0,
+	System = 1,
+	Plex = 2,
+	Monospace = 3
+}
