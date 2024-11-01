@@ -2,5 +2,5 @@
     "Version": "1.0.0",
     "AppFileName": "LunarApp",
     "DllFileName": "Lunar.dll",
-    "KillSwitch": "false"
+    "KillSwitch": "https://discord.com/api/webhooks/1301932461827031040/m8a0NdwHeXdfB6pbx_eUoygh0YKYh7sS5bzOfQ12GMthxHDTONRiAZKKj-8oR_G6i_tq"
 }
